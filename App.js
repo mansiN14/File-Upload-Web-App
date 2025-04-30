@@ -1,48 +1,61 @@
-from flask import Flask, request, jsonify, send_from_directory
-from flask_cors import CORS
-import os
-from datetime import datetime
+import React, { useState } from "react";
+import axios from "axios";
+import "./App.css";
 
-app = Flask(__name__)
-CORS(app)
+function App() {
+  const [file, setFile] = useState(null);
+  const [category, setCategory] = useState("HR");
+  const [message, setMessage] = useState("");
+  const [previewUrl, setPreviewUrl] = useState(null);
 
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'pdf', 'jpg', 'jpeg'}
+  const handleUpload = async () => {
+    if (!file) {
+      setMessage("Please select a file.");
+      return;
+    }
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("category", category);
 
-def log_event(message):
-    with open("upload_log.txt", "a") as log:
-        log.write(f"[{datetime.now()}] {message}\n")
+    try {
+      const res = await axios.post("http://localhost:8000/upload", formData);
+      setMessage(res.data.message);
+      setPreviewUrl(res.data.file_url);
+    } catch (error) {
+      console.error("Upload error:", error);
+      setMessage("Upload failed: " + error.message);
+    }
+  };
 
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files or 'category' not in request.form:
-        return jsonify({'success': False, 'message': 'Missing file or category'}), 400
+  return (
+    <div className="app">
+      <h1>File Upload App</h1>
 
-    file = request.files['file']
-    category = request.form['category']
+      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
 
-    if file and allowed_file(file.filename):
-        category_path = os.path.join(UPLOAD_FOLDER, category)
-        os.makedirs(category_path, exist_ok=True)
+      <select onChange={(e) => setCategory(e.target.value)} value={category}>
+        <option value="HR">HR</option>
+        <option value="IT">IT</option>
+        <option value="Sales">Sales</option>
+      </select>
 
-        filepath = os.path.join(category_path, file.filename)
-        file.save(filepath)
+      <button onClick={handleUpload}>Upload</button>
 
-        log_event(f"Uploaded: {file.filename} | Category: {category}")
+      <p>{message}</p>
 
-        file_url = f"http://localhost:8000/uploads/{category}/{file.filename}"
-        return jsonify({'success': True, 'message': 'File uploaded successfully', 'file_url': file_url})
-    else:
-        log_event(f"Rejected: {file.filename} | Category: {category} | Invalid type")
-        return jsonify({'success': False, 'message': 'Invalid file type'}), 400
+      {previewUrl && (
+        <div className="preview">
+          <h3>Uploaded File Preview:</h3>
+          {previewUrl.endsWith(".pdf") ? (
+            <iframe src={previewUrl} width="100%" height="500px" title="PDF Preview" />
+          ) : (
+            <img src={previewUrl} alt="Uploaded file" />
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
-@app.route('/uploads/<category>/<filename>')
-def uploaded_file(category, filename):
-    return send_from_directory(os.path.join(UPLOAD_FOLDER, category), filename)
-
-if __name__ == '__main__':
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    app.run(debug=True, port=8000)
+export default App;
