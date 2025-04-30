@@ -1,0 +1,41 @@
+.app {
+  max-width: 600px;
+  margin: auto;
+  padding: 30px;
+  text-align: center;
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #fdfbfb, #ebedee);
+  border-radius: 15px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  margin-top: 50px;
+}
+
+input, select, button {
+  margin: 10px;
+  padding: 10px;
+  font-size: 16px;
+}
+
+button {
+  background-color: #1e90ff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+button:hover {
+  background-color: #005bb5;
+}
+
+.preview {
+  margin-top: 20px;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 10px;
+}
